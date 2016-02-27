@@ -1,0 +1,12 @@
+flags: {}
+extra-package-dbs: []
+packages:
+- '.'
+extra-deps:
+- api-builder-0.11.0.0
+- base-orphans-0.5.2
+- http-client-0.4.20
+- http-types-0.8.6
+- reddit-0.2.0.0
+- text-1.2.2.0
+resolver: lts-5.4
