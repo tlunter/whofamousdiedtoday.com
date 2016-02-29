@@ -12,8 +12,11 @@ import Data.Text
 import Text.Parsec
 import Text.Parsec.Text
 
+import CommonNames
+
 data Match = Match { matchFirstName :: String
                    , matchLastName :: String
+                   , matchAge :: Maybe Int
                    }
                 deriving (Show)
 
@@ -27,20 +30,47 @@ diedExpressions = satisfy (not . isAlphaNum) >> exprs
 
 nameExpression :: Parser (String, String)
 nameExpression = do
-    x <- upper
-    xs <- many letter
+    firstName <- Prelude.foldl1 (\a e -> (a <|> try e)) $ fmap string commonNames
     spaces
-    y <- upper
-    ys <- many letter
-    return (x:xs, y:ys)
+    lastName <- many1 letter
+    return (firstName, lastName)
 
-deadTitle :: Parser (Maybe Match)
-deadTitle = do
-    lookAhead diedExpr
-    (first, last) <- lookAhead nameExpr
-    return $ Just Match { matchFirstName = first, matchLastName = last }
-    where diedExpr = try diedExpressions <|> (anyChar >> diedExpr)
-          nameExpr = try nameExpression <|> (anyChar >> nameExpr)
+ageExpression :: Parser Int
+ageExpression = do
+    satisfy (not . isAlphaNum)
+    string "age"
+    many letter
+    spaces
+    age <- many1 digit
+    return $ read age
+
+yearExpression :: Parser Int
+yearExpression = do
+    satisfy (not . isAlphaNum)
+    age <- many1 digit
+    spaces
+    string "years old"
+    return $ read age
+
+maybeParse :: Text -> Parser a -> Maybe a
+maybeParse t p = either (const Nothing) Just $ parse p "" t
+
+deadTitle :: Text -> Maybe Match
+deadTitle title =
+    case died of
+        Nothing -> Nothing
+        Just x -> case names of
+            Nothing -> Nothing
+            Just (first, last) -> Just Match { matchFirstName = first
+                                             , matchLastName  = last
+                                             , matchAge       = age
+                                             }
+    where died  = maybeParse title diedExprs
+          names = maybeParse title nameExpr
+          age   = maybeParse title ageExpr
+          diedExprs = try diedExpressions <|> (anyChar >> diedExprs)
+          nameExpr  = try nameExpression <|> (anyChar >> nameExpr)
+          ageExpr   = try ageExpression <|> try yearExpression <|> (anyChar >> ageExpr)
 
 parseTitle :: Text -> Maybe Match
-parseTitle title = either (const Nothing) id $ parse deadTitle "" title
+parseTitle title = deadTitle (toLower title)
