@@ -17,11 +17,13 @@ library
   hs-source-dirs:      src
   exposed-modules:     DeathFinder
   other-modules:       TitleParser
+                     , CommonNames
   build-depends:       base >= 4.7 && < 5
   default-language:    Haskell2010
   build-depends:       reddit
                      , text
                      , parsec
+                     , aeson
 
 executable whofamousdiedtoday-exe
   hs-source-dirs:      app
