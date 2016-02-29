@@ -32,6 +32,12 @@ executable whofamousdiedtoday-exe
   build-depends:       base
                      , whofamousdiedtoday
                      , text
+                     , hedis
+                     , network
+                     , transformers
+                     , time
+                     , aeson
+                     , bytestring
   default-language:    Haskell2010
 
 test-suite whofamousdiedtoday-test
