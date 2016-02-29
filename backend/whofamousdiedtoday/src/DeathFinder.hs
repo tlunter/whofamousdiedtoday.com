@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DeriveGeneric #-}
 module DeathFinder
     ( listings
     , PossibleDeath
@@ -7,10 +8,12 @@ module DeathFinder
     , link
     ) where
 
+import Data.Aeson
 import Data.Either
 import Data.Maybe
 import Data.List (filter, head)
 import Data.Text (Text, isInfixOf, pack)
+import GHC.Generics
 
 import Reddit
 import Reddit.Actions.Post
@@ -24,8 +27,11 @@ data PossibleDeath =
     PossibleDeath { firstName :: Text
                   , lastName :: Text
                   , link :: Text
-                  }
-    deriving (Show, Eq)
+                  } deriving (Generic, Show, Eq)
+
+instance ToJSON PossibleDeath
+
+instance FromJSON PossibleDeath
 
 defaultOptions = Options { limit = Nothing, pagination = Nothing }
 
