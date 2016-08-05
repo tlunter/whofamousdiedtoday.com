@@ -1,18 +1,21 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
 
-import Control.Concurrent (threadDelay)
+import Control.Concurrent (threadDelay, forkIO, yield)
+import Control.Monad (forever, mapM)
 import Control.Monad.IO.Class (liftIO)
-import Data.Maybe (fromMaybe, isNothing)
+import Data.Maybe (Maybe(..), fromMaybe, isNothing, mapMaybe, catMaybes)
 import Data.Text (Text)
 import Data.Time
 import Network
 import System.Environment (lookupEnv)
 
-import Database.Redis
-import Data.Aeson (encode)
+import Database.Redis (Redis, Reply, Connection, ConnectInfo, keys, lrange, rpush, runRedis, defaultConnectInfo, connect, connectHost, connectPort)
+import Data.Aeson (encode, decode)
 import qualified Data.ByteString.Char8 as B (pack)
-import qualified Data.ByteString.Lazy as BL (toStrict)
+import qualified Data.ByteString.Internal as BI (ByteString)
+import qualified Data.ByteString.Lazy as BL (ByteString, toStrict, fromStrict)
+import Web.Scotty as Scotty
 
 import DeathFinder
 
@@ -48,8 +51,23 @@ saveListings pid = do
     liftIO $ threadDelay 10000000
     saveListings newPid
 
+getRecordedListings :: Connection -> IO [PossibleDeath]
+getRecordedListings conn = runRedis conn $ do
+    possibleDeathDates <- keys "deaths:*"
+    let deathDates = either (const []) id possibleDeathDates
+    possibleDeaths <- mapM (\x -> lrange x 0 (-1)) deathDates
+    let deaths = concatMap (either (const []) id) possibleDeaths
+    return $ mapMaybe (decode . BL.fromStrict) deaths
+
+webServer :: Connection -> IO ()
+webServer conn = scotty 3000 $ do
+    get "/deaths" $ liftIO (getRecordedListings conn) >>= json
+    get "/test" $ html "<html><body>Test!</body></html>"
+
 main :: IO ()
 main = do
     connectInfo <- redisConnectionInfo
     conn <- connect connectInfo
-    runRedis conn $ saveListings Nothing
+    forkIO $ runRedis conn $ saveListings Nothing
+    forkIO $ liftIO $ webServer conn
+    forever yield

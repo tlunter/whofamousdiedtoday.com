@@ -38,6 +38,7 @@ executable whofamousdiedtoday-exe
                      , time
                      , aeson
                      , bytestring
+                     , scotty
   default-language:    Haskell2010
 
 test-suite whofamousdiedtoday-test
