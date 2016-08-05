@@ -30,8 +30,8 @@ diedExpressions = satisfy (not . isAlphaNum) >> exprs
 
 nameExpression :: Parser (String, String)
 nameExpression = do
-    firstName <- Prelude.foldl1 (\a e -> (a <|> try e)) $ fmap string commonNames
-    spaces
+    firstName <- Prelude.foldl1 (\a e -> (a <|> try (satisfy (not . isAlphaNum) >> e))) $ fmap string commonNames
+    skipMany1 space
     lastName <- many1 letter
     return (firstName, lastName)
 
@@ -40,7 +40,7 @@ ageExpression = do
     satisfy (not . isAlphaNum)
     string "age"
     many letter
-    spaces
+    skipMany1 space
     age <- many1 digit
     return $ read age
 
@@ -48,7 +48,7 @@ yearExpression :: Parser Int
 yearExpression = do
     satisfy (not . isAlphaNum)
     age <- many1 digit
-    spaces
+    skipMany1 space
     string "years old"
     return $ read age
 
