@@ -1,0 +1,12 @@
+{
+  "name": "frontend",
+  "version": "1.0.0",
+  "dependencies": {},
+  "devDependencies": {
+    "watch": "^0.19.1"
+  },
+  "scripts": {
+    "build": "elm make --output target/elm.js src/WhoFamousDiedToday.elm",
+    "watch": "watch 'npm run build' 'src/' --wait 0.1"
+  }
+}
