@@ -6,6 +6,7 @@ import Control.Monad (forever, mapM)
 import Control.Monad.IO.Class (liftIO)
 import Data.Maybe (Maybe(..), fromMaybe, isNothing, mapMaybe, catMaybes)
 import Data.Text (Text)
+import Data.Text.Lazy (pack)
 import Data.Time
 import Network
 import System.Environment (lookupEnv)
@@ -60,9 +61,13 @@ getRecordedListings conn = runRedis conn $ do
     return $ mapMaybe (decode . BL.fromStrict) deaths
 
 webServer :: Connection -> IO ()
-webServer conn = scotty 3000 $ do
-    get "/deaths" $ liftIO (getRecordedListings conn) >>= json
-    get "/test" $ html "<html><body>Test!</body></html>"
+webServer conn = do
+    index <- readFile "../../frontend/index.html"
+    elm <- readFile "../../frontend/target/elm.js"
+    scotty 3000 $ do
+        get "/deaths" $ liftIO (getRecordedListings conn) >>= json
+        get "/elm.js" $ html $ Data.Text.Lazy.pack elm
+        get "/" $ html $ Data.Text.Lazy.pack index
 
 main :: IO ()
 main = do
