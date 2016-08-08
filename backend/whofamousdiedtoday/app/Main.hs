@@ -75,4 +75,4 @@ main = do
     conn <- connect connectInfo
     forkIO $ runRedis conn $ saveListings Nothing
     forkIO $ liftIO $ webServer conn
-    forever yield
+    forever $ threadDelay 10000000
